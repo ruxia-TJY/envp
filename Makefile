@@ -1,4 +1,4 @@
-TARGET = p
+TARGET = envp
 CC = gcc
 BUILD_PATH = ./
 

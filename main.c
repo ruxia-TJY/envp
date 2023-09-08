@@ -48,21 +48,24 @@ static struct option long_options[] = {
 
 extern char **environ;
 
+Env *create_head_node(char *str);
+Env *add_node(Env *pH, Env *new);
 
-Env *create(char *str);
-Env *add(Env *pH,Env *new);
+void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag);
+int get_len(char *str);
 
-void printKEYVALUE(Env *env,BOOL ColorFlag,BOOL SplitFlag);
-int getlen(char *str);
 void Usage();
 
 int main(int argc,char *argv[]) {
-    BOOL ColorFlag = FALSE;
-    BOOL SplitFlag = FALSE;
+    BOOL color_flag = FALSE;
+    BOOL split_flag = FALSE;
 
-
-    int MoreFlag = 0;
-    char *MoreArg = argv[1];
+    // just hope one Key, such as $PATH
+    //      envp PATH -s -c
+    // print_all_flag_all_0 = argc - color_flag - split_flag - 1
+    // 1: only print PATH
+    // 0: print All
+    int print_all_flag_all_0 = 0;
 
     int c;
     int option_index = 0;
@@ -70,10 +73,10 @@ int main(int argc,char *argv[]) {
                             long_options, &option_index)) != -1) {
         switch (c) {
             case 'c':
-                ColorFlag = TRUE;
+                color_flag = TRUE;
                 break;
             case 's':
-                SplitFlag = TRUE;
+                split_flag = TRUE;
                 break;
             case 'h':
                 Usage();
@@ -87,24 +90,25 @@ int main(int argc,char *argv[]) {
         }
     }
 
-    MoreFlag = argc - ColorFlag - SplitFlag - 1;
+    print_all_flag_all_0 = argc - color_flag - split_flag - 1;
+    int index_print_all_flag = argc - 1;
 
 
     char **envstr = environ;
 
     // can not get environ
-    if (getlen(*envstr) == 0) {
+    if (get_len(*envstr) == 0) {
         fprintf(stderr, "Error: can not get environment\n");
         return 0;
     }
 
     int KEY_len = 1;
 
-    Env *head = create(*envstr);
+    Env *head = create_head_node(*envstr);
     *envstr++;
 
     while (*envstr) {
-        add(head, create(*envstr));
+        add_node(head, create_head_node(*envstr));
         *envstr++;
         KEY_len++;
     }
@@ -112,32 +116,30 @@ int main(int argc,char *argv[]) {
 
     Env *temp = head;
 
-    if (MoreFlag) {
-        if (!strcmp(temp->key, MoreArg)) {
-            printf("------");
-            printKEYVALUE(temp, ColorFlag, SplitFlag);
+    if (print_all_flag_all_0) {
+        if (!strcmp(temp->key, argv[index_print_all_flag])) {
+            print_node(temp, color_flag, split_flag);
             return 0;
         }
-
     } else {
-        printKEYVALUE(temp, ColorFlag, SplitFlag);
+        print_node(temp, color_flag, split_flag);
     }
 
     while ((temp = temp->next) != NULL) {
-        if (MoreFlag) {
-            if (!strcmp(temp->key, MoreArg)) {
-                printKEYVALUE(temp, ColorFlag, SplitFlag);
+        if (print_all_flag_all_0) {
+            if (!strcmp(temp->key, argv[index_print_all_flag])) {
+                print_node(temp, color_flag, split_flag);
                 return 0;
             }
         } else {
-            printKEYVALUE(temp, ColorFlag, SplitFlag);
+            print_node(temp, color_flag, split_flag);
         }
     }
-    return 0;
 
+    return 0;
 }
 
-void printKEYVALUE(Env *env,BOOL ColorFlag,BOOL SplitFlag)
+void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag)
 {
     if(ColorFlag)printf(TCOLORPC_P_FR_GREEN);
     printf("%s",env->key);
@@ -166,7 +168,7 @@ void printKEYVALUE(Env *env,BOOL ColorFlag,BOOL SplitFlag)
 
 
 
-int getlen(char *str)
+int get_len(char *str)
 {
     int len = 0;
 
@@ -178,7 +180,7 @@ int getlen(char *str)
 }
 
 
-Env *add(Env *pH,Env *new)
+Env *add_node(Env *pH, Env *new)
 {
     Env *p = pH;
     while (NULL != p->next){
@@ -187,7 +189,7 @@ Env *add(Env *pH,Env *new)
     p->next = new;
 }
 
-Env* create(char *str)
+Env* create_head_node(char *str)
 {
     Env *node = NULL;
     node = (Env *) malloc(sizeof (Env));

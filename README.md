@@ -1,10 +1,10 @@
-# p
+# envp
 
 
 
 ## Description
 
- p is a better view for environment in linux.
+ envp is a better view for environment in linux.
 
 
 
@@ -22,21 +22,19 @@ download from release.
 
 
 
-`Tip`: it is recommended to add to environment variable for use ,and used `alias p='p -c -s'`
+`Tip`: it is recommended to add_node to environment variable for use ,and used `alias p='p -c -s'`
 
 
 
 ## how to use
 
-
-
 #### show all key and value
 
-just run p
+just run `envp`
 
 #### show specify key
 
-such as `p PATH`
+such as `envp PATH`
 
 
 
