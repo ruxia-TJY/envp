@@ -23,7 +23,6 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <getopt.h>
 #include "include/tColorPC.h"
 
@@ -31,7 +30,7 @@ SOFTWARE.
 #define TRUE 1
 #define FALSE 0
 
-#define VERSION "0.0.0.1"
+#define VERSION "0.0.0.2"
 
 typedef struct env{
     char *key;
@@ -48,13 +47,14 @@ static struct option long_options[] = {
 
 extern char **environ;
 
-Env *create_head_node(char *str);
-Env *add_node(Env *pH, Env *new);
+static Env *create_node(char *str);
+static void *add_node(Env *pH, Env *new);
+static void free_Env(Env *head);
 
-void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag);
-int get_len(char *str);
+static void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag);
+static int get_len(char *str);
 
-void Usage();
+static void Usage();
 
 int main(int argc,char *argv[]) {
     BOOL color_flag = FALSE;
@@ -65,7 +65,7 @@ int main(int argc,char *argv[]) {
     // print_all_flag_all_0 = argc - color_flag - split_flag - 1
     // 1: only print PATH
     // 0: print All
-    int print_all_flag_all_0 = 0;
+    int print_all_flag_all_0;
 
     int c;
     int option_index = 0;
@@ -102,33 +102,34 @@ int main(int argc,char *argv[]) {
         return 0;
     }
 
-    int KEY_len = 1;
-
-    Env *head = create_head_node(*envstr);
+    Env *head = create_node(*envstr);
     *envstr++;
 
     while (*envstr) {
-        add_node(head, create_head_node(*envstr));
+        add_node(head, create_node(*envstr));
         *envstr++;
-        KEY_len++;
     }
 
 
     Env *temp = head;
 
+    // check header
     if (print_all_flag_all_0) {
         if (!strcmp(temp->key, argv[index_print_all_flag])) {
             print_node(temp, color_flag, split_flag);
+            free_Env(temp);
             return 0;
         }
     } else {
         print_node(temp, color_flag, split_flag);
     }
 
-    while ((temp = temp->next) != NULL) {
+    // check all
+    while (NULL != (temp = temp->next)) {
         if (print_all_flag_all_0) {
             if (!strcmp(temp->key, argv[index_print_all_flag])) {
                 print_node(temp, color_flag, split_flag);
+                free_Env(head);
                 return 0;
             }
         } else {
@@ -139,7 +140,7 @@ int main(int argc,char *argv[]) {
     return 0;
 }
 
-void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag)
+static void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag)
 {
     if(ColorFlag)printf(TCOLORPC_P_FR_GREEN);
     printf("%s",env->key);
@@ -168,7 +169,7 @@ void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag)
 
 
 
-int get_len(char *str)
+static int get_len(char *str)
 {
     int len = 0;
 
@@ -180,7 +181,7 @@ int get_len(char *str)
 }
 
 
-Env *add_node(Env *pH, Env *new)
+static void *add_node(Env *pH, Env *new)
 {
     Env *p = pH;
     while (NULL != p->next){
@@ -189,12 +190,12 @@ Env *add_node(Env *pH, Env *new)
     p->next = new;
 }
 
-Env* create_head_node(char *str)
+static Env* create_node(char *str)
 {
     Env *node = NULL;
     node = (Env *) malloc(sizeof (Env));
 
-    if(node == NULL){
+    if(NULL == node){
         printf("malloc fair!\n");
     }
 
@@ -208,7 +209,18 @@ Env* create_head_node(char *str)
     return node;
 }
 
-void Usage()
+static void free_Env(Env *head)
+{
+    Env *tmp;
+    while (NULL != head){
+        tmp = head;
+        head = head->next;
+        free(tmp);
+        tmp = NULL;
+    }
+}
+
+static void Usage()
 {
     fprintf(stdout,"Usage: [OPTION]\n");
     fprintf(stdout,"\t-c, --color\t\tcolorize the output\n");
