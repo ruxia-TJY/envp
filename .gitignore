@@ -1,0 +1,6 @@
+# some ide or edit file
+/.idea
+/.vscode
+
+# executable file
+envp
