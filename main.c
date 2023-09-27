@@ -30,7 +30,13 @@ SOFTWARE.
 #define TRUE 1
 #define FALSE 0
 
-#define VERSION "0.0.0.2"
+#define VERSION "0.0.0.3"
+#define AUTHOR "JiayuTu<ruxia.tjy@qq.com>"
+
+#define print_opt_help(opt_index,help_str) \
+    do{                                    \
+		printf("\t--%s\t-%c\t%s", long_options[opt_index].name, (char)long_options[opt_index].val, help_str); \
+	} while (0)
 
 typedef struct env{
     char *key;
@@ -50,6 +56,7 @@ extern char **environ;
 static Env *create_node(char *str);
 static void *add_node(Env *pH, Env *new);
 static void free_Env(Env *head);
+static Env *find_node(Env *head,char *name);
 
 static void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag);
 static int get_len(char *str);
@@ -110,33 +117,22 @@ int main(int argc,char *argv[]) {
         *envstr++;
     }
 
+    if (print_all_flag_all_0){
+        Env *temp = find_node(head,argv[index_print_all_flag]);
 
-    Env *temp = head;
-
-    // check header
-    if (print_all_flag_all_0) {
-        if (!strcmp(temp->key, argv[index_print_all_flag])) {
+        if (temp != NULL){
             print_node(temp, color_flag, split_flag);
-            free_Env(temp);
-            return 0;
+        } else{
+            printf("%s not found!\n",argv[index_print_all_flag]);
         }
-    } else {
-        print_node(temp, color_flag, split_flag);
-    }
-
-    // check all
-    while (NULL != (temp = temp->next)) {
-        if (print_all_flag_all_0) {
-            if (!strcmp(temp->key, argv[index_print_all_flag])) {
-                print_node(temp, color_flag, split_flag);
-                free_Env(head);
-                return 0;
-            }
-        } else {
-            print_node(temp, color_flag, split_flag);
+    } else{
+        print_node(head,color_flag,split_flag);
+        while (NULL != (head = head->next)){
+            print_node(head,color_flag,split_flag);
         }
     }
 
+    free_Env(head);
     return 0;
 }
 
@@ -167,8 +163,6 @@ static void print_node(Env *env, BOOL ColorFlag, BOOL SplitFlag)
 
 }
 
-
-
 static int get_len(char *str)
 {
     int len = 0;
@@ -179,7 +173,6 @@ static int get_len(char *str)
     }
     return len;
 }
-
 
 static void *add_node(Env *pH, Env *new)
 {
@@ -209,6 +202,16 @@ static Env* create_node(char *str)
     return node;
 }
 
+static Env *find_node(Env *head,char *name)
+{
+    if(!strcmp(head->key,name))return head;
+
+    while (NULL != (head = head->next)){
+        if(!strcmp(head->key,name))return head;
+    }
+    return NULL;
+}
+
 static void free_Env(Env *head)
 {
     Env *tmp;
@@ -222,12 +225,11 @@ static void free_Env(Env *head)
 
 static void Usage()
 {
-    fprintf(stdout,"Usage: [OPTION]\n");
-    fprintf(stdout,"\t-c, --color\t\tcolorize the output\n");
-
-    fprintf(stdout,"\t-h, --help\t\tshow usage\n");
-    fprintf(stdout,"\t-s, --split\t\tsplit VALUE 1 in line\n");
-    fprintf(stdout,"\t-v, --version\t\tshow version\n");
-    fprintf(stdout,"ver:" VERSION " copyright JiayuTu<ruxia.tjy@qq.com>\nthanks for use!\n");
+    printf("\nUsage:\n");
+    print_opt_help(0,"colorize the output\n");
+    print_opt_help(1,"show the help\n");
+    print_opt_help(2,"split VALUE 1 in line\n");
+    print_opt_help(3,"show Version\n");
+    printf("\n" "ver:" VERSION "  copyright " AUTHOR "\n");
 
 }
